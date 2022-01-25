@@ -196,6 +196,93 @@ card2.render()
 const card3 = new Cards("img/tabs/vegy.jpg", 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 229, 'vegy')
 card3.render()
 
+// form
+const forms = document.querySelectorAll('form')
+
+forms.forEach(item => {
+	postData(item)
+})
+
+const massage = {
+	success: 'Спасибо, ожидайте ответа !',
+	fail: 'Что-то пошло не так',
+}
+
+
+function postData (form) {
+	form.addEventListener('submit', (e) => {
+		e.preventDefault()
+		const massageBlock = document.createElement('div')
+
+		massageBlock.style.cssText = `
+		margin-top: 25px;
+		text-align: center;
+		`
+		form.insertAdjacentElement('afterend', massageBlock)
+
+		const request = new XMLHttpRequest()
+		request.open('POST', 'server.php')
+		// request.setRequestHeader('Content-type', 'application/json')
+
+		const formData = new FormData(form)
+		request.send(formData)
+
+		massageBlock.classList.add('loader')
+
+		request.addEventListener('load', () => {
+			if(request.status === 200){
+				massageBlock.textContent = massage.success
+				massageBlock.classList.remove('loader')
+			} else {
+				massageBlock.textContent = massage.fail
+				massageBlock.classList.remove('loader')
+			}
+			form.reset()
+		})
+	})
+}
+
+// slider
+const slides = document.querySelectorAll('.offer__slide'),
+	next = document.querySelector('.offer__slider-next'),
+	prev = document.querySelector('.offer__slider-prev'),
+	current = document.querySelector('#current');
+
+let counter = 1
+
+showSlide(counter)
+
+
+function showSlide(i){
+	if(i > slides.length){
+		counter = 1
+	}
+
+	if(i < 1){
+		counter = slides.length
+	}
+
+	if(i > 5){
+		current.textContent = counter
+	} else {
+		current.textContent = `0${counter}`
+	}
+
+	slides.forEach(item => {
+		item.style.display = 'none'
+	})
+
+	slides[counter - 1].style.display = 'block'
+}
+
+prev.addEventListener('click', () => {
+	showSlide(counter -= 1)
+})
+
+next.addEventListener('click', () => {
+	showSlide(counter += 1)
+})
+
 
 
 
