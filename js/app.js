@@ -270,9 +270,11 @@ function showSlide(i){
 
 	slides.forEach(item => {
 		item.style.display = 'none'
+		item.classList.remove('animate')
 	})
 
 	slides[counter - 1].style.display = 'block'
+	slides[counter - 1].classList.add('animate')
 }
 
 prev.addEventListener('click', () => {
