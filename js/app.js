@@ -47,8 +47,7 @@ tabsParent.addEventListener('click', (e) => {
 
 // modal [simplified]
 const modalTrigger = document.querySelectorAll('[data-modal]'),
-	  modal = document.querySelector('.modal'),
-      modalCloseBtn = document.querySelector('.modal__close')
+	  modal = document.querySelector('.modal')
 
 function openModal () {
 	addShow(modal)
@@ -68,12 +67,8 @@ modalTrigger.forEach( item => {
 	})
 })
 
-modalCloseBtn.addEventListener('click', () => {
-	closeModal ()
-})
-
 modal.addEventListener('click', (e) => {
-	if (e.target === modal) {
+	if (e.target === modal || e.target.classList.contains('modal__close')) {
 		closeModal ()
 	}
 })
@@ -219,36 +214,79 @@ function postData (form) {
 		text-align: center;
 		`
 		form.insertAdjacentElement('afterend', massageBlock)
-
-		const request = new XMLHttpRequest()
-		request.open('POST', 'server.php')
-		// request.setRequestHeader('Content-type', 'application/json')
-
 		const formData = new FormData(form)
-		request.send(formData)
+		const obj = {}
+
+		formData.forEach((item, i) => {
+			obj[i] = item
+		})
+
+		const json = JSON.stringify(obj)
+
+		fetch('server.php', {
+			method: 'POST',
+			headers: {
+				'Content-type': 'application/json'
+			},
+			body: json
+		}).then(() => {
+			showResultModal(massage.success)
+		}).catch(() => {
+			showResultModal(massage.fail)
+		}).finally(() => {
+			form.reset()
+			massageBlock.remove()
+		})
 
 		massageBlock.classList.add('loader')
-
-		request.addEventListener('load', () => {
-			if(request.status === 200){
-				massageBlock.textContent = massage.success
-				massageBlock.classList.remove('loader')
-			} else {
-				massageBlock.textContent = massage.fail
-				massageBlock.classList.remove('loader')
-			}
-			form.reset()
-		})
 	})
 }
+
+function showResultModal (massage) {
+	openModal()
+	const prevModal = document.querySelector('.modal__dialog')
+	prevModal.classList.add('hide')
+
+	const resultModal = document.createElement('div')
+	resultModal.classList.add('modal__dialog')
+
+	resultModal.innerHTML = `
+	<div class="modal__content">
+			<div class="modal__close">x</div>
+			<div class="modal__title">${massage}</div>
+	</div>
+	`
+	modal.append(resultModal)
+
+	setTimeout(() => {
+		prevModal.classList.remove('hide')
+		closeModal()
+		resultModal.remove()
+	}, 2000)
+}
+
+
+
+
+
+
+
 
 // slider
 const slides = document.querySelectorAll('.offer__slide'),
 	next = document.querySelector('.offer__slider-next'),
 	prev = document.querySelector('.offer__slider-prev'),
-	current = document.querySelector('#current');
+	current = document.querySelector('#current'),
+	total = document.querySelector('#total');
 
 let counter = 1
+
+if (counter > 10) {
+	total.textContent = slides.length
+} else {
+	total.textContent = `0${slides.length}`
+}
+
 
 showSlide(counter)
 
@@ -262,7 +300,7 @@ function showSlide(i){
 		counter = slides.length
 	}
 
-	if(i > 5){
+	if(i > 10){
 		current.textContent = counter
 	} else {
 		current.textContent = `0${counter}`
