@@ -184,12 +184,23 @@ class Cards {
 	}
 }
 
-const card1 = new Cards('img/tabs/elite.jpg', 'Меню “Премиум”', 'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!', 550, 'alt')
-card1.render()
-const card2 = new Cards("img/tabs/post.jpg", 'Меню "Постное"', 'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.', 430, "post")
-card2.render()
-const card3 = new Cards("img/tabs/vegy.jpg", 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 229, 'vegy')
-card3.render()
+async function getCard(url) {
+	const res = await fetch(url)
+
+	if(!res.ok) {
+		throw new Error (`'Cannot fetch ${url}, status ${res.status}'`)
+	} 
+
+	return await res.json()
+}
+
+getCard('http://localhost:3000/menu')
+	.then(data => {
+		data.forEach(({img, altimg, title, descr, price}) => {
+			new Cards(img, title, descr, price, altimg).render()
+		})
+	})
+
 
 // form
 const forms = document.querySelectorAll('form')
@@ -201,6 +212,20 @@ forms.forEach(item => {
 const massage = {
 	success: 'Спасибо, ожидайте ответа !',
 	fail: 'Что-то пошло не так',
+}
+
+const post = async (url, body) => {
+	const res = await fetch(url, {
+		method: 'POST',
+			headers: {
+				'Content-type': 'application/json'
+			},
+			body: body
+	})
+
+
+
+	return await res.json()
 }
 
 
@@ -223,13 +248,8 @@ function postData (form) {
 
 		const json = JSON.stringify(obj)
 
-		fetch('server.php', {
-			method: 'POST',
-			headers: {
-				'Content-type': 'application/json'
-			},
-			body: json
-		}).then(() => {
+		post('http://localhost:3000/requests', json)
+			.then(() => {
 			showResultModal(massage.success)
 		}).catch(() => {
 			showResultModal(massage.fail)
@@ -324,7 +344,73 @@ next.addEventListener('click', () => {
 })
 
 
+//calculator 
+
+const result = document.querySelector('.calculating__result span')
+let gender, height, weight, age, ratio;
+
+function calcTotal() {
+	if(!gender || !height || !weight || !age || !ratio) {
+		result.textContent = '____'
+		return
+	}
+
+	if(gender === 'female') {
+		result.textContent = Math.round((447.6 + (9.2 * weight) + (3.1 * height) - (4.3 * age)) * ratio)
+	} else {
+		result.textContent = Math.round((88.36 + (13.4 * weight) + (4.8 * height) - (5.7 * age)) * ratio)
+	}
+}
+
+calcTotal()
+
+function getStaticInfo(parentSelector) {
+	const elements = document.querySelectorAll(`${parentSelector} div`)
+
+	elements.forEach(item => {
+		item.addEventListener('click', (e) => {
+			if(e.target.getAttribute('data-ratio')){
+				ratio = +e.target.getAttribute('data-ratio')
+			} else {
+				gender = e.target.getAttribute('id')
+			}
+
+			console.log(ratio)
+
+			elements.forEach(item => {
+				item.classList.remove('calculating__choose-item_active')
+			})
+
+			e.target.classList.add('calculating__choose-item_active')
 
 
+			calcTotal()
+		})
+	})
+}
 
+getStaticInfo('#gender')
+getStaticInfo('.calculating__choose_big')
 
+function getDynamicInfo(selector){
+	const input = document.querySelector(selector)
+
+	input.addEventListener('input', () => {
+		switch (input.getAttribute('id')){
+			case 'height':
+				height = +input.value
+				break
+			case 'weight':
+				weight = +input.value
+				break
+			case 'age':
+				age = +input.value
+		}
+
+		calcTotal()
+	})
+}
+
+getDynamicInfo('#height')
+getDynamicInfo('#weight')
+getDynamicInfo('#age')
